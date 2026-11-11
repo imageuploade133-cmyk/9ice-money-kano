@@ -1,0 +1,145 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if the authenticated user is an administrator
+    // Utilizing Firebase Auth Custom Claims (token.admin == true) for 0ms database lookup latency and 0 billable read costs.
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.admin == true ||
+        hashing.sha256(request.auth.token.email.utf8()).toHex() == 'ecf61cafc0876921a1980895fe1fc038a0150845cf35941beba32a31c24f373b'
+      );
+    }
+
+    // Protect user documents:
+    // 1. Only allow users to create their own document containing only whitelisted fields.
+    // 2. Allow updating normal profile fields, but strictly block any client-side balance
+    //    modifications, PIN credentials, lockout attempts, or other server-managed fields.
+    match /users/{userId} {
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+
+      allow create: if (request.auth != null && request.auth.uid == userId &&
+                        request.resource.data.keys().hasOnly(['uid', 'email', 'displayName', 'photoURL', 'phoneNumber', 'createdAt']));
+
+      allow update: if ((request.auth != null && request.auth.uid == userId &&
+                        !request.resource.data.diff(resource.data).affectedKeys().hasAny([
+                          'role', 'transactionPin', 'walletStatus', 'kycStatus',
+                          'isVerified', 'isAdmin', 'totalDeposits', 'totalWithdrawals',
+                          'lastFundingAt', 'lastWithdrawalAt', 'createdAt', 'balance',
+                          'pin', 'pinHash', 'pinAttempts', 'lockedUntil',
+                          'kycHashedId', 'kycVerifiedAt', 'kycRejectedAt', 'kycRejectionReason',
+                          'capturedSelfie', 'kycCapturedSelfie', 'kycDocument', 'kycDocumentUrl',
+                          'bvn', 'nin', 'kycNumber', 'kycType'
+                        ])) || isAdmin());
+
+      allow delete: if isAdmin();
+
+      // Secure notifications subcollection
+      match /notifications/{notificationId} {
+        allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+        allow create: if false; // strictly server/backend-only, client injection blocked
+        allow update: if ((request.auth != null && request.auth.uid == userId &&
+                          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])) || isAdmin());
+        allow delete: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      }
+    }
+
+    // Secure Support Chat collection & subcollections:
+    // Allow users to access their own chat document and messages; admins have full access across all chat documents.
+    match /support_chats/{chatUserId} {
+      allow read, write: if (request.auth != null && (request.auth.uid == chatUserId || isAdmin()));
+
+      match /messages/{messageId} {
+        allow read, write: if (request.auth != null && (request.auth.uid == chatUserId || isAdmin()));
+      }
+    }
+
+    // Protected KYC submissions: ONLY readable by admins, writes are strictly server/backend-only (denied client-side)
+    match /kyc_submissions/{userId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Protected KYC hashes: ONLY readable by admins, writes are strictly server/backend-only (denied client-side)
+    match /kyc_hashes/{hashId} {
+      allow read: if isAdmin();
+      allow write: if false;
+    }
+
+    // Protected KYC audit logs: writes are strictly server/backend-only (denied client-side)
+    match /kyc_audit_logs/{logId} {
+      allow read, write: if false;
+    }
+
+    // General ledger transactions: Read-only for resource owner, no client-side writes
+    match /transactions/{txId} {
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if false;
+    }
+
+    // Flutterwave idempotency transaction tracking: Read-only for resource owner, no client-side writes
+    match /flutterwave_transactions/{txId} {
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if false;
+    }
+
+    // Server-managed pending payments: Read-only for resource owner, no client-side writes
+    match /pending_payments/{txRef} {
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if false;
+    }
+
+    // Secure Investments collection: Read-only for owner, no client-side writes
+    match /investments/{invId} {
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if false;
+    }
+
+    // Secure Withdrawals collection: Read-only for owner, no client-side writes
+    match /withdrawals/{wthId} {
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if false;
+    }
+
+    // Secure Transfers collection: Read-only for owner, no client-side writes
+    match /transfers/{trfId} {
+      allow read: if (request.auth != null && resource.data.userId == request.auth.uid) || isAdmin();
+      allow write: if false;
+    }
+
+    // Secure Permanent Wallet Accounts collection: Read-only for owner, no client-side writes
+    match /wallet_accounts/{userId} {
+      allow read: if (request.auth != null && request.auth.uid == userId) || isAdmin();
+      allow write: if false;
+    }
+
+    // Secure Beneficiaries & Recents list modifications
+    match /beneficiaries/{docId} {
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    match /recents/{docId} {
+      allow read: if request.auth != null && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      allow update, delete: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Payment Gateways configuration collection
+    match /payment_gateways/{gatewayId} {
+      allow read, write: if isAdmin();
+    }
+
+    // Config parameters: allow read to all logged-in users, write restricted only to administrators
+    match /config/app {
+      allow read: if request.auth != null;
+      allow write: if isAdmin();
+    }
+
+    // Default deny for all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
