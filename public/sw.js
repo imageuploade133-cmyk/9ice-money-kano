@@ -1,4 +1,4 @@
-const CACHE_NAME = "e-tech-wallet-v1.2.0";
+const CACHE_NAME = "9icemoney-v1.2.0";
 
 const ASSETS_TO_CACHE = [
   "/",
