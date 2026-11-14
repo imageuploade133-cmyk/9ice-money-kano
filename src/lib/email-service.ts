@@ -171,7 +171,7 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
   let adminUsername = process.env.EMAIL_ADMIN_USERNAME || process.env.WHATSAPP_ADMIN_USERNAME || "";
   let adminPassword = process.env.EMAIL_ADMIN_PASSWORD || process.env.WHATSAPP_ADMIN_PASSWORD || "";
   let senderName = "9iceMoney";
-  let senderEmail = "no-reply@eglobalpay.com";
+  let senderEmail = "9icemoney@emakemrnd.com.ng";
 
   // Fetch dynamic Email Gateway credentials using 5-minute in-memory cache
   const data = await getCachedEmailGatewayConfig();
