@@ -4,6 +4,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/email-service";
 import { getGatewayUrl } from "@/lib/gateway-util";
+import { getOtpHmacSecret } from "@/lib/otp-security";
 
 const GATEWAY_URL = getGatewayUrl();
 
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
       const expiresAtMs = now + 10 * 60 * 1000; // 10 minutes expiry
       const expiresAtIso = new Date(expiresAtMs).toISOString();
 
-      const HMAC_SECRET = process.env.CPANEL_SESSION_SECRET || process.env.JWT_SECRET || "pin_reset_otp_secret_key";
+      const HMAC_SECRET = getOtpHmacSecret();
       const otpHash = crypto.createHmac("sha256", HMAC_SECRET).update(rawOtp.trim()).digest("hex");
 
       // Save OTP session in Firestore `otp_sessions/pin_reset_email_${uid}`
