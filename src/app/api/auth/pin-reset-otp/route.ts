@@ -258,7 +258,6 @@ export async function POST(req: Request) {
       success: true,
       channel: "whatsapp",
       message: result.message || "PIN reset OTP sent successfully.",
-      ...(result.devOtpCode ? { devOtpCode: result.devOtpCode } : {}),
     });
 
   } catch (err: unknown) {
