@@ -4,6 +4,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import { authenticateUserRequest } from "@/lib/auth-util";
 import { sendEmail } from "@/lib/email-service";
 import { getGatewayUrl } from "@/lib/gateway-util";
+import { getOtpHmacSecret, constantTimeHexEqual } from "@/lib/otp-security";
 
 function maskEmail(email: string): string {
   if (!email || !email.includes("@")) return "u***r@gmail.com";
@@ -41,8 +42,8 @@ export async function POST(req: Request) {
 
     if (action === "send") {
       // Generate 6-digit OTP code
-      const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
-      const otpHash = crypto.createHash("sha256").update(rawOtp).digest("hex");
+      const rawOtp = crypto.randomInt(100000, 1000000).toString();
+      const otpHash = crypto.createHmac("sha256", getOtpHmacSecret()).update(rawOtp).digest("hex");
       const nowMs = Date.now();
       const expiresAtMs = nowMs + 5 * 60 * 1000; // 5 minutes TTL
 
@@ -87,7 +88,7 @@ export async function POST(req: Request) {
               subject: "🔐 Your 2FA Login Verification Code",
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto; padding: 20px; border: 1px solid #eee; rounded: 16px;">
-                  <h2 style="color: #FC7A00; text-align: center;">E-Global Pay</h2>
+                  <h2 style="color: #FC7A00; text-align: center;">9iceMoney</h2>
                   <h3 style="text-align: center; color: #111;">2FA Login Security Verification</h3>
                   <p style="color: #555; font-size: 14px;">Your 6-digit 2FA login verification code is:</p>
                   <div style="background: #FFF8EC; border: 1px font-mono solid #FFE8CC; border-radius: 12px; padding: 16px; text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 6px; color: #FC7A00; margin: 20px 0;">
@@ -155,8 +156,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Too many failed attempts. Please request a new OTP code." }, { status: 429 });
       }
 
-      const submittedHash = crypto.createHash("sha256").update(submittedOtp).digest("hex");
-      if (submittedHash !== otpData.otpHash) {
+      const submittedHash = crypto.createHmac("sha256", getOtpHmacSecret()).update(submittedOtp).digest("hex");
+      if (!constantTimeHexEqual(submittedHash, otpData.otpHash)) {
         await adminDb.collection("login_2fa_otps").doc(uid).update({
           attempts: (otpData.attempts || 0) + 1,
         }).catch(() => {});
