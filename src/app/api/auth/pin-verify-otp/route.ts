@@ -3,6 +3,7 @@ import { authenticateUserRequest } from "@/lib/auth-util";
 import { adminDb } from "@/lib/firebase-admin";
 import crypto from "crypto";
 import { getGatewayUrl } from "@/lib/gateway-util";
+import { getOtpHmacSecret, constantTimeHexEqual } from "@/lib/otp-security";
 
 const GATEWAY_URL = getGatewayUrl();
 
@@ -59,10 +60,10 @@ export async function POST(req: Request) {
       }
 
       // Verify HMAC-SHA256 OTP Hash
-      const HMAC_SECRET = process.env.CPANEL_SESSION_SECRET || process.env.JWT_SECRET || "pin_reset_otp_secret_key";
+      const HMAC_SECRET = getOtpHmacSecret();
       const submittedHash = crypto.createHmac("sha256", HMAC_SECRET).update(String(otpCode).trim()).digest("hex");
 
-      if (submittedHash !== data.otpHash) {
+      if (!constantTimeHexEqual(submittedHash, data.otpHash)) {
         attempts += 1;
         await docRef.update({ attempts });
         return NextResponse.json({ error: `Incorrect OTP code. ${Math.max(0, 5 - attempts)} attempts remaining.` }, { status: 400 });
