@@ -3,6 +3,7 @@ import { adminDb } from "@/lib/firebase-admin";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/email-service";
 import { getGatewayUrl } from "@/lib/gateway-util";
+import { getOtpHmacSecret } from "@/lib/otp-security";
 
 const GATEWAY_URL = getGatewayUrl();
 
@@ -39,10 +40,10 @@ export async function POST(req: Request) {
       }
 
       // Generate 6-digit OTP code and hash it
-      const rawOtp = crypto.randomInt(100000, 999999).toString();
+      const rawOtp = crypto.randomInt(100000, 1000000).toString();
       const expiresAtMs = now + 5 * 60 * 1000; // 5 minutes
 
-      const HMAC_SECRET = process.env.CPANEL_SESSION_SECRET || process.env.JWT_SECRET || "signup_otp_secret_key";
+      const HMAC_SECRET = getOtpHmacSecret();
       const otpHash = crypto.createHmac("sha256", HMAC_SECRET).update(rawOtp.trim()).digest("hex");
 
       // Store in Firestore signup_email_otps with hashed OTP
@@ -63,12 +64,12 @@ export async function POST(req: Request) {
 
       const dispatched = await sendEmail({
         to: cleanEmail,
-        subject: "Welcome to E-Global Pay - Email Verification Code",
+        subject: "Welcome to 9iceMoney - Email Verification Code",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-            <h2 style="color: #FC7A00; margin-bottom: 16px;">E-Global Pay Account Registration</h2>
+            <h2 style="color: #FC7A00; margin-bottom: 16px;">9iceMoney Account Registration</h2>
             <p>Hello,</p>
-            <p>Thank you for choosing E-Global Pay! Use the 6-digit verification code below to verify your email address and complete your account registration:</p>
+            <p>Thank you for choosing 9iceMoney! Use the 6-digit verification code below to verify your email address and complete your account registration:</p>
             <div style="background-color: #f4f4f4; padding: 15px; font-size: 26px; font-weight: bold; text-align: center; letter-spacing: 6px; color: #333; margin: 20px 0; border-radius: 4px;">
               ${safeRawOtp}
             </div>
