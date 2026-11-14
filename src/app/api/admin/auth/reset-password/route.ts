@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import bcrypt from "bcryptjs";
 import { callWhatsappBackend } from "@/lib/whatsapp-service";
+import crypto from "crypto";
 
 function normalizePhone(phone: string): string {
   let cleaned = phone.replace(/[^\d+]/g, "");
@@ -77,7 +78,7 @@ export async function POST(req: Request) {
       }
 
       // Generate 6-digit OTP
-      const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      const rawOtp = crypto.randomInt(100000, 1000000).toString();
       const hashedOtp = await bcrypt.hash(rawOtp, 10);
       const expiresAt = now + 5 * 60 * 1000; // 5 minutes
 
@@ -104,7 +105,6 @@ export async function POST(req: Request) {
         createdAt: new Date().toISOString()
       });
 
-      console.log(`[Admin Password Reset OTP Generated] Email: ${cleanEmail}, Raw OTP: ${rawOtp}`);
 
       // Dispatch WhatsApp message with OTP code
       const cleanNum = inputPhone.replace(/\D/g, "");
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
         ? `234${cleanNum.startsWith("0") ? cleanNum.slice(1) : cleanNum}`
         : cleanNum;
 
-      const whatsappMessage = `[E-Tech Security] Your Admin Password Reset OTP code is ${rawOtp}. Valid for 5 minutes. Do not share this code with anyone.`;
+      const whatsappMessage = `[9iceMoney Security] Your Admin Password Reset OTP code is ${rawOtp}. Valid for 5 minutes. Do not share this code with anyone.`;
 
       let whatsappSent = false;
       try {
@@ -129,14 +129,12 @@ export async function POST(req: Request) {
         success: true,
         message: `OTP sent successfully via WhatsApp to ${inputPhone.slice(0, 6)}****${inputPhone.slice(-2)}`,
         whatsappDispatched: whatsappSent,
-        // Include rawOtp in response for local test/dev sandbox
-        devOtp: process.env.NODE_ENV !== "production" ? rawOtp : undefined
       });
     }
 
     // Step 2: Verify OTP
     if (action === "verify_otp") {
-      if (!otp) {
+      if (!/^\\d{6}$/.test(String(otp || ""))) {
         return NextResponse.json({ error: "6-digit OTP code is required." }, { status: 400 });
       }
 
@@ -194,7 +192,8 @@ export async function POST(req: Request) {
       const otpDocRef = adminDb.collection("admin_otp_requests").doc(cleanEmail);
       const otpSnap = await otpDocRef.get();
 
-      if (!otpSnap.exists || !otpSnap.data()?.verified) {
+      const resetData = otpSnap.exists ? otpSnap.data() || {} : {};
+      if (!otpSnap.exists || !resetData.verified || !resetData.expiresAt || Date.now() > resetData.expiresAt) {
         return NextResponse.json({ error: "Phone OTP verification is required prior to triggering password recovery." }, { status: 403 });
       }
 
