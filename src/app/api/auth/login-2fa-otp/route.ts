@@ -128,7 +128,6 @@ export async function POST(req: Request) {
         message: `2FA OTP code sent via ${channel === "whatsapp" ? "WhatsApp" : "Email"}.`,
         maskedEmail: maskEmail(userEmail),
         maskedPhone: maskPhone(userPhone),
-        devOtp: process.env.NODE_ENV !== "production" ? rawOtp : undefined,
       });
 
     } else if (action === "verify") {
