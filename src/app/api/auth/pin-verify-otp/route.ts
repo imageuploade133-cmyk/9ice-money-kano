@@ -38,43 +38,52 @@ export async function POST(req: Request) {
 
       const uid = authUser.uid;
       const docRef = adminDb.collection("otp_sessions").doc(`pin_reset_email_${uid}`);
-      const docSnap = await docRef.get();
+      const verification = await adminDb.runTransaction(async (transaction) => {
+        const docSnap = await transaction.get(docRef);
+        if (!docSnap.exists) {
+          return { success: false as const, status: 400, error: "No active Email OTP session found. Please request a new code." };
+        }
 
-      if (!docSnap.exists) {
-        return NextResponse.json({ error: "No active Email OTP session found. Please request a new code." }, { status: 400 });
-      }
+        const data = docSnap.data() || {};
+        if (data.consumed || data.verified) {
+          return { success: false as const, status: 400, error: "This OTP code has already been used. Please request a new code." };
+        }
 
-      const data = docSnap.data() || {};
+        if (!data.expiresAtMs || now > Number(data.expiresAtMs)) {
+          transaction.delete(docRef);
+          return { success: false as const, status: 400, error: "OTP code has expired. Please request a new code." };
+        }
 
-      if (data.consumed) {
-        return NextResponse.json({ error: "This OTP code has already been consumed. Please request a new code." }, { status: 400 });
-      }
+        const attempts = Number(data.attempts) || 0;
+        if (attempts >= 5) {
+          transaction.delete(docRef);
+          return { success: false as const, status: 429, error: "Maximum OTP attempts exceeded. Please request a new code." };
+        }
 
-      if (data.expiresAtMs && now > data.expiresAtMs) {
-        return NextResponse.json({ error: "OTP code has expired. Please request a new code." }, { status: 400 });
-      }
+        const submittedHash = crypto.createHmac("sha256", getOtpHmacSecret()).update(String(otpCode).trim()).digest("hex");
+        if (!constantTimeHexEqual(submittedHash, data.otpHash)) {
+          const nextAttempts = attempts + 1;
+          transaction.update(docRef, { attempts: nextAttempts });
+          return {
+            success: false as const,
+            status: nextAttempts >= 5 ? 429 : 400,
+            error: nextAttempts >= 5
+              ? "Maximum OTP attempts exceeded. Please request a new code."
+              : `Incorrect OTP code. ${5 - nextAttempts} attempts remaining.`,
+          };
+        }
 
-      let attempts = Number(data.attempts) || 0;
-      if (attempts >= 5) {
-        return NextResponse.json({ error: "Maximum OTP attempts exceeded. Please request a new code." }, { status: 429 });
-      }
-
-      // Verify HMAC-SHA256 OTP Hash
-      const HMAC_SECRET = getOtpHmacSecret();
-      const submittedHash = crypto.createHmac("sha256", HMAC_SECRET).update(String(otpCode).trim()).digest("hex");
-
-      if (!constantTimeHexEqual(submittedHash, data.otpHash)) {
-        attempts += 1;
-        await docRef.update({ attempts });
-        return NextResponse.json({ error: `Incorrect OTP code. ${Math.max(0, 5 - attempts)} attempts remaining.` }, { status: 400 });
-      }
-
-      // Mark OTP session as verified in Firestore
-      await docRef.update({
-        verified: true,
-        verifiedAtMs: now,
-        verifiedAt: new Date(now).toISOString(),
+        transaction.update(docRef, {
+          verified: true,
+          verifiedAtMs: now,
+          verifiedAt: new Date(now).toISOString(),
+        });
+        return { success: true as const };
       });
+
+      if (!verification.success) {
+        return NextResponse.json({ error: verification.error }, { status: verification.status });
+      }
 
       return NextResponse.json({
         success: true,
