@@ -584,7 +584,7 @@ export default function SignUpPage() {
           <div className="relative w-14 h-14 mb-2 flex items-center justify-center">
             <AppLogo size={48} />
           </div>
-          <h1 className="font-hanken font-bold text-xl tracking-tight text-black">E-Global Pay</h1>
+          <h1 className="font-hanken font-bold text-xl tracking-tight text-black">9iceMoney</h1>
           <p className="text-gray-500 font-hanken mt-1 text-[11px] font-semibold">Stage-by-Stage Premium Account Setup</p>
         </div>
 
