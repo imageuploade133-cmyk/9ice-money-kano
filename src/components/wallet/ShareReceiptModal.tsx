@@ -142,7 +142,7 @@ export const ShareReceiptModal: React.FC<ShareReceiptModalProps> = ({
 
       const ref = transaction.reference || "transfer";
       const file = new File([blob], `Receipt_${ref}.png`, { type: "image/png" });
-      const summaryText = `Transaction Receipt from ${config.appName || "E-Global Pay"}\nRef: ${ref}\nAmount: ${currencySymbol}${displayAmount.toLocaleString()}`;
+      const summaryText = `Transaction Receipt from ${config.appName || "9iceMoney"}\nRef: ${ref}\nAmount: ${currencySymbol}${displayAmount.toLocaleString()}`;
 
       if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
         await navigator.share({
@@ -334,7 +334,7 @@ export const ShareReceiptModal: React.FC<ShareReceiptModalProps> = ({
               <div className="relative z-10 flex justify-between items-center pb-2">
                 <div className="flex items-center gap-2">
                   <AppLogo size={32} />
-                  <span className="font-extrabold text-lg text-black tracking-tight">{config.appName || "E-Global Pay"}</span>
+                  <span className="font-extrabold text-lg text-black tracking-tight">{config.appName || "9iceMoney"}</span>
                 </div>
                 <span className="text-xs font-semibold text-gray-500">Transaction Receipt</span>
               </div>
@@ -404,7 +404,7 @@ export const ShareReceiptModal: React.FC<ShareReceiptModalProps> = ({
               {/* Card Disclaimer Footer */}
               <div className="relative z-10 pt-3 border-t border-gray-100">
                 <p className="text-[10px] text-gray-400 leading-relaxed font-normal">
-                  {config.receiptCbnText || "E-Global Pay is a Fintech app powered by Flutterwave, licensed by CBN and insured by NDIC."}
+                  {config.receiptCbnText || "9iceMoney is a Fintech app powered by Flutterwave, licensed by CBN and insured by NDIC."}
                 </p>
               </div>
             </div>

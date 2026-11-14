@@ -435,7 +435,7 @@ export const TransactionReceipt: React.FC<TransactionReceiptProps> = ({
   const displayNarration = resolveNarrationDisplay(transaction);
 
   // Logo Resolution
-  const receiptHeaderName = config.receiptName || "E-TECH GLOBAL HUB";
+  const receiptHeaderName = config.receiptName || "9iceMoney";
   const receiptHeaderLogo = config.receiptLogoUrl || config.logoUrl || "https://i.ibb.co/WWjZrtC7/E-Tech.png";
 
   const detectedNetworkName = transaction.network || transaction.billerName || (
@@ -540,8 +540,8 @@ export const TransactionReceipt: React.FC<TransactionReceiptProps> = ({
   if (isDeposit) {
     txTypeDisplay = "Bank Deposit";
 
-    recipientNameDisplay = userFullName || transaction.recipientName || "E-Global User";
-    const recBank = displayReceivingBank !== "Bank" ? displayReceivingBank : (config.appName || "E-Global Pay");
+    recipientNameDisplay = userFullName || transaction.recipientName || "9iceMoney User";
+    const recBank = displayReceivingBank !== "Bank" ? displayReceivingBank : (config.appName || "9iceMoney");
     const recAcc = maskAccountNum(transaction.virtualAccountNumber || userData?.virtualAccountNumber);
     recipientBankAndAcc = recAcc ? `${recBank} | ${recAcc}` : recBank;
 
@@ -557,8 +557,8 @@ export const TransactionReceipt: React.FC<TransactionReceiptProps> = ({
     const recAcc = transaction.beneficiaryAccountNumber || transaction.recipientAccountNumber;
     recipientBankAndAcc = recAcc ? `${recBank} | ${recAcc}` : recBank;
 
-    senderNameDisplay = userFullName || transaction.senderName || config.appName || "E-Global Pay User";
-    const sendBank = config.appName || "E-Global Pay";
+    senderNameDisplay = userFullName || transaction.senderName || config.appName || "9iceMoney User";
+    const sendBank = config.appName || "9iceMoney";
     const sendAcc = userData?.virtualAccountNumber || userData?.accountNumber || transaction.senderAccountNumber;
     senderBankAndAcc = sendAcc ? `${sendBank} | ${sendAcc}` : sendBank;
   } else if (isBill || isAirtime || isData || isElectricity || isCable || isWaec) {
@@ -569,32 +569,32 @@ export const TransactionReceipt: React.FC<TransactionReceiptProps> = ({
     const maskedTarget = maskAccountNum(targetNum);
     recipientBankAndAcc = maskedTarget ? `${recipientNameDisplay} | ${maskedTarget}` : recipientNameDisplay;
 
-    senderNameDisplay = userFullName || config.appName || "E-Global Pay User";
+    senderNameDisplay = userFullName || config.appName || "9iceMoney User";
     const sendAcc = maskAccountNum(userData?.virtualAccountNumber || userData?.accountNumber);
-    senderBankAndAcc = sendAcc ? `${config.appName || "E-Global Pay"} | ${sendAcc}` : (config.appName || "E-Global Pay");
+    senderBankAndAcc = sendAcc ? `${config.appName || "9iceMoney"} | ${sendAcc}` : (config.appName || "9iceMoney");
   } else if (isStore) {
     txTypeDisplay = "Store Purchase";
 
-    recipientNameDisplay = transaction.billerName || config.appName || "E-Global Store";
-    recipientBankAndAcc = `${config.appName || "E-Global Store"} | Store Order`;
+    recipientNameDisplay = transaction.billerName || config.appName || "9iceMoney Store";
+    recipientBankAndAcc = `${config.appName || "9iceMoney Store"} | Store Order`;
 
-    senderNameDisplay = userFullName || "E-Global Customer";
+    senderNameDisplay = userFullName || "9iceMoney Customer";
     const sendAcc = maskAccountNum(userData?.virtualAccountNumber || userData?.accountNumber);
-    senderBankAndAcc = sendAcc ? `${config.appName || "E-Global Pay"} | ${sendAcc}` : (config.appName || "E-Global Pay");
+    senderBankAndAcc = sendAcc ? `${config.appName || "9iceMoney"} | ${sendAcc}` : (config.appName || "9iceMoney");
   } else if (isSwap) {
     txTypeDisplay = "Currency Swap";
 
     recipientNameDisplay = `${transaction.destinationCurrency || "USD"} Wallet`;
     recipientBankAndAcc = `Currency Exchange`;
 
-    senderNameDisplay = userFullName || "E-Global Customer";
+    senderNameDisplay = userFullName || "9iceMoney Customer";
     senderBankAndAcc = `${transaction.sourceCurrency || "NGN"} Wallet`;
   } else if (isRefund) {
     txTypeDisplay = "Transaction Reversal";
 
-    recipientNameDisplay = userFullName || "E-Global User";
+    recipientNameDisplay = userFullName || "9iceMoney User";
     const recAcc = maskAccountNum(userData?.virtualAccountNumber || userData?.accountNumber);
-    recipientBankAndAcc = recAcc ? `${config.appName || "E-Global Pay"} | ${recAcc}` : (config.appName || "E-Global Pay");
+    recipientBankAndAcc = recAcc ? `${config.appName || "9iceMoney"} | ${recAcc}` : (config.appName || "9iceMoney");
 
     senderNameDisplay = transaction.beneficiaryName || transaction.recipientName || detectedNetworkName || "Reversal Service";
     senderBankAndAcc = "Reversal Refund";
@@ -602,10 +602,10 @@ export const TransactionReceipt: React.FC<TransactionReceiptProps> = ({
     txTypeDisplay = "Payment Transaction";
 
     recipientNameDisplay = transaction.recipientName || transaction.beneficiaryName || "Recipient";
-    recipientBankAndAcc = resolvedTransferToBank !== "Bank" ? resolvedTransferToBank : (config.appName || "E-Global Pay");
+    recipientBankAndAcc = resolvedTransferToBank !== "Bank" ? resolvedTransferToBank : (config.appName || "9iceMoney");
 
     senderNameDisplay = userFullName || "Sender";
-    senderBankAndAcc = config.appName || "E-Global Pay";
+    senderBankAndAcc = config.appName || "9iceMoney";
   }
 
   const displayAmount = (isHeldDeposit ? (Number(transaction.metadata?.heldAmount) || transaction.amount) : isRefund ? (Number(transaction.totalCredited) || (transaction.amount + fee + vat)) : transaction.amount);
@@ -962,10 +962,10 @@ export const TransactionReceipt: React.FC<TransactionReceiptProps> = ({
                       <span>Sender Details</span>
                       <div className="flex flex-col items-end text-right max-w-[220px]">
                         <span className="text-black font-bold uppercase">
-                          {userFullName || transaction.senderName || config.appName || "E-Global Pay User"}
+                          {userFullName || transaction.senderName || config.appName || "9iceMoney User"}
                         </span>
                         <span className="text-black font-extrabold text-xs tracking-tight mt-0.5">
-                          {config.appName || "E-Global Pay"}
+                          {config.appName || "9iceMoney"}
                         </span>
                         {(userData?.virtualAccountNumber || userData?.accountNumber || transaction.senderAccountNumber) && (
                           <span className="font-mono text-gray-600 font-bold text-[11px] mt-0.5">
@@ -1662,7 +1662,7 @@ export const TransactionReceipt: React.FC<TransactionReceiptProps> = ({
 
                   <div className="flex justify-between items-center text-gray-500 font-semibold">
                     <span>Provider Channel</span>
-                    <span className="text-black font-bold">{transaction.provider || "E-Tech Gateway"}</span>
+                    <span className="text-black font-bold">{transaction.provider || "9iceMoney Gateway"}</span>
                   </div>
                 </div>
               </div>

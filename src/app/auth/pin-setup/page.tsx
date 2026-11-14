@@ -117,7 +117,7 @@ export default function PinSetupPage() {
         <div className="relative w-16 h-16 mb-4 flex items-center justify-center">
           <AppLogo size={56} />
         </div>
-        <h1 className="font-hanken font-bold text-xl tracking-tight text-black mb-1">E-Global Pay</h1>
+        <h1 className="font-hanken font-bold text-xl tracking-tight text-black mb-1">9iceMoney</h1>
         <p className={cn(
           "font-hanken tracking-widest uppercase text-xs font-bold",
           step === 1 ? "text-red-500 font-extrabold animate-pulse" : "text-gray-500"

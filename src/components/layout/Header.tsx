@@ -42,7 +42,7 @@ const INITIAL_NOTIFICATIONS: Notification[] = [
   {
     id: "3",
     title: "Premium Promo Reward",
-    message: "Welcome to E-Tech Infinite! Your elite status grants you 15% off at luxury ZUMA lounges. Tap to view invitation card.",
+    message: "Welcome to 9iceMoney! Your elite status grants you 15% off at luxury ZUMA lounges. Tap to view invitation card.",
     time: "5h ago",
     type: "promo",
     read: true,

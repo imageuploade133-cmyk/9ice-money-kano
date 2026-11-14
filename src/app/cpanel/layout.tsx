@@ -519,7 +519,7 @@ function CpanelLayoutContent({ children }: { children: React.ReactNode }) {
             <p className="font-hanken text-xs text-gray-500 mt-1.5 font-semibold leading-relaxed">
               {isResetPasswordMode
                 ? "Enter your administrator email address to receive a secure password recovery link."
-                : "Welcome to the E-Tech Enterprise Control Panel. Authenticate using your Administrator credentials."}
+                : "Welcome to the 9iceMoney Enterprise Control Panel. Authenticate using your Administrator credentials."}
             </p>
           </div>
 
@@ -762,9 +762,9 @@ function CpanelLayoutContent({ children }: { children: React.ReactNode }) {
       )}>
         <div className="flex items-center gap-2.5">
           <div className="w-8 h-8 rounded-xl bg-orange-500/10 border border-orange-500/20 p-1 flex items-center justify-center">
-            <img src={config.logoUrl || "https://i.ibb.co/WWjZrtC7/E-Tech.png"} alt="E-Tech" className="object-contain w-full h-full" />
+            <img src={config.logoUrl || "https://i.ibb.co/WWjZrtC7/E-Tech.png"} alt="9iceMoney" className="object-contain w-full h-full" />
           </div>
-          <span className={cn("font-hanken font-black text-sm tracking-tight", isDark ? "text-white" : "text-gray-900")}>E-TECH CP</span>
+          <span className={cn("font-hanken font-black text-sm tracking-tight", isDark ? "text-white" : "text-gray-900")}>9ICEMONEY CP</span>
         </div>
 
         <button
@@ -807,7 +807,7 @@ function CpanelLayoutContent({ children }: { children: React.ReactNode }) {
           <div className={cn("p-4 border-b flex items-center justify-between min-h-[73px] shrink-0", isDark ? "border-gray-800" : "border-gray-100")}>
             <div className={cn("flex items-center gap-2.5 min-w-0 flex-1", isSidebarMinimized && !isMenuOpen && "md:justify-center")}>
               <div className="w-9 h-9 rounded-xl bg-orange-500/10 border border-orange-500/20 p-1 flex-shrink-0 flex items-center justify-center shadow-xs">
-                <img src={config.logoUrl || "https://i.ibb.co/WWjZrtC7/E-Tech.png"} alt="E-Tech" className="object-contain w-full h-full" />
+                <img src={config.logoUrl || "https://i.ibb.co/WWjZrtC7/E-Tech.png"} alt="9iceMoney" className="object-contain w-full h-full" />
               </div>
               {(!isSidebarMinimized || isMenuOpen) && (
                 <motion.div
@@ -816,7 +816,7 @@ function CpanelLayoutContent({ children }: { children: React.ReactNode }) {
                   className="flex flex-col min-w-0"
                 >
                   <h1 className={cn("font-hanken font-black text-sm tracking-tight truncate", isDark ? "text-white" : "text-gray-900")}>
-                    E-TECH
+                    9iceMoney
                   </h1>
                   <p className="text-[8px] font-black tracking-widest text-[#FC7A00] uppercase mt-0.5">Control Panel</p>
                 </motion.div>

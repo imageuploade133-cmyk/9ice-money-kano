@@ -87,14 +87,14 @@ export interface AppConfig {
 const DEFAULT_CONFIG: AppConfig = {
   appVersionPushNotificationEnabled: true,
   featureToggles: DEFAULT_FEATURE_TOGGLES,
-  appName: "E-Global Pay",
+  appName: "9iceMoney",
   logoUrl: "https://i.ibb.co/WWjZrtC7/E-Tech.png",
   receiptLogoUrl: "https://i.ibb.co/WWjZrtC7/E-Tech.png",
-  receiptName: "E-TECH GLOBAL HUB",
+  receiptName: "9iceMoney",
   receiptBgImageUrl: "",
   receiptBgImageEnabled: false,
   receiptBgImageOpacity: 0.15,
-  receiptCbnText: "E-Global Pay is a Fintech app powered by Flutterwave, licensed by CBN and insured by NDIC.",
+  receiptCbnText: "9iceMoney is a Fintech app powered by Flutterwave, licensed by CBN and insured by NDIC.",
   supportPhone1: "+234 800 345 6225",
   supportPhone2: "+234 901 234 5678",
   supportEmail: "support@e-globaltechhub.com",
@@ -164,6 +164,37 @@ interface ConfigContextProps {
   syncRealFirebaseData: () => Promise<void>;
 }
 
+const LEGACY_BRAND_NAMES = new Set([
+  "e-global pay",
+  "e-global pay tech hub",
+  "e-tech global hub",
+]);
+
+/**
+ * Normalize persisted legacy display names at the presentation boundary.
+ * This deliberately does not write to Firestore or alter operational IDs,
+ * support contacts, payment references, or provider configuration.
+ */
+function normalizeAppBranding<T extends Partial<AppConfig>>(source: T): T & Partial<AppConfig> {
+  const normalized: Partial<AppConfig> = {
+    ...source,
+    appName: "9iceMoney",
+  };
+
+  if (typeof source.receiptName === "string" && LEGACY_BRAND_NAMES.has(source.receiptName.trim().toLowerCase())) {
+    normalized.receiptName = "9iceMoney";
+  }
+
+  if (typeof source.receiptCbnText === "string") {
+    normalized.receiptCbnText = source.receiptCbnText
+      .replace(/E-Global Pay Tech Hub/gi, "9iceMoney")
+      .replace(/E-Global Pay/gi, "9iceMoney")
+      .replace(/E-Tech Global Hub/gi, "9iceMoney");
+  }
+
+  return normalized as T & Partial<AppConfig>;
+}
+
 const ConfigContext = createContext<ConfigContextProps | undefined>(undefined);
 
 export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -178,7 +209,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (res.ok && data.success && data.config) {
         setConfig((prev) => ({
           ...prev,
-          ...data.config,
+          ...normalizeAppBranding(data.config),
         }));
       }
     } catch (err) {
@@ -207,7 +238,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             );
             setConfig((prev) => ({
               ...prev,
-              ...safeRemoteData,
+              ...normalizeAppBranding(safeRemoteData),
               hasCustomImgbbApiKey: hasCustomKey,
               // Preserve existing featureToggles if safeRemoteData does not contain featureToggles
               featureToggles: safeRemoteData.featureToggles || prev.featureToggles || DEFAULT_FEATURE_TOGGLES,
@@ -282,7 +313,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         if (data.success && data.config) {
           setConfig((prev) => ({
             ...prev,
-            ...data.config,
+            ...normalizeAppBranding(data.config),
           }));
           return;
         }
@@ -293,7 +324,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   };
 
   const updateConfig = async (updates: Partial<AppConfig>) => {
-    const newConfig = { ...config, ...updates };
+    const newConfig = normalizeAppBranding({ ...config, ...updates });
     setConfig(newConfig);
 
     try {
@@ -315,7 +346,7 @@ export const ConfigProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       if (data.config) {
         setConfig((prev) => ({
           ...prev,
-          ...data.config,
+          ...normalizeAppBranding(data.config),
         }));
       }
     } catch (e) {

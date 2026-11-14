@@ -635,7 +635,7 @@ export default function PinPage() {
           <div className="relative w-14 h-14 mb-3 flex items-center justify-center">
             <AppLogo size={56} />
           </div>
-          <h1 className="font-hanken font-bold text-xl tracking-tight text-black mb-1">E-Global Pay</h1>
+          <h1 className="font-hanken font-bold text-xl tracking-tight text-black mb-1">9iceMoney</h1>
           <span className="px-3 py-1 bg-orange-50 border border-orange-200 text-[#FC7A00] font-black uppercase text-[10px] tracking-widest rounded-full shadow-2xs">
             2FA Security Active
           </span>
@@ -835,7 +835,7 @@ export default function PinPage() {
         <div className="relative w-14 h-14 min-[375px]:w-16 min-[375px]:h-16 mb-3 flex items-center justify-center">
           <AppLogo size={56} />
         </div>
-        <h1 className="font-hanken font-bold text-lg min-[375px]:text-xl tracking-tight text-black mb-1">E-Global Pay</h1>
+        <h1 className="font-hanken font-bold text-lg min-[375px]:text-xl tracking-tight text-black mb-1">9iceMoney</h1>
         <p className="text-gray-500 font-hanken tracking-widest uppercase text-[10px] min-[375px]:text-xs">Enter Access PIN</p>
       </div>
 

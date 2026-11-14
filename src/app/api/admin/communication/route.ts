@@ -103,7 +103,7 @@ export async function POST(req: Request) {
         };
       }
 
-      const brandName = config.sender.senderName || config.whatsappOtp.brandName || "E-Global Pay";
+      const brandName = config.sender.senderName || config.whatsappOtp.brandName || "9iceMoney";
 
       // WHATSAPP TEST DISPATCH
       if (channel === "whatsapp" || templateType === "whatsapp_otp" || templateType === "whatsapp_text") {

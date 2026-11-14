@@ -86,7 +86,7 @@ export async function ensureEmailApiKeyOnGateway(params: {
     const createApiKeyEndpoint = `${baseUrl}/api/email/apikeys`;
 
     const createBody = {
-      name: senderName || "E-Global Pay Gateway Key",
+      name: senderName || "9iceMoney Gateway Key",
       customSecret: emailApiKey,
       customId: emailInstanceId || emailApiKey,
       scopes: ["email.send", "email.otp", "email.templates", "email.logs"],
@@ -170,7 +170,7 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
   let instanceId = process.env.EMAIL_INSTANCE_ID || process.env.WHATSAPP_INSTANCE_ID || "inst_33647102";
   let adminUsername = process.env.EMAIL_ADMIN_USERNAME || process.env.WHATSAPP_ADMIN_USERNAME || "";
   let adminPassword = process.env.EMAIL_ADMIN_PASSWORD || process.env.WHATSAPP_ADMIN_PASSWORD || "";
-  let senderName = "E-Global Pay";
+  let senderName = "9iceMoney";
   let senderEmail = "no-reply@eglobalpay.com";
 
   // Fetch dynamic Email Gateway credentials using 5-minute in-memory cache
@@ -194,7 +194,13 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
     if (data.emailAdminPassword) adminPassword = data.emailAdminPassword;
     else if (data.whatsappAdminPassword) adminPassword = data.whatsappAdminPassword;
 
-    if (data.senderName) senderName = data.senderName;
+    if (data.senderName) {
+      const configuredSenderName = data.senderName.trim();
+      const legacySenderNames = ["e-global pay", "e-global pay tech hub", "e-tech global hub"];
+      senderName = legacySenderNames.includes(configuredSenderName.toLowerCase())
+        ? "9iceMoney"
+        : configuredSenderName;
+    }
     if (data.senderEmail) senderEmail = data.senderEmail;
   }
 
@@ -346,7 +352,7 @@ export async function sendWelcomeEmail(toEmail: string, userName?: string): Prom
     }
 
     const tpl = config.welcomeEmail;
-    const brandName = config.sender.senderName || "E-Global Pay";
+    const brandName = config.sender.senderName || "9iceMoney";
     const name = userName || "Valued Customer";
     const replyTo = config.sender.replyToEmail || config.sender.senderEmail;
 

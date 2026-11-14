@@ -1,36 +1,34 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 9iceMoney
 
-## Getting Started
+9iceMoney is a secure digital wallet and financial services application built with Next.js, React and Firebase.
 
-First, run the development server:
+## Development
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+``
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Production build
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+``
 
-## Learn More
+## Branding configuration
 
-To learn more about Next.js, take a look at the following resources:
+- Global application name and default receipt branding: `src/lib/ConfigContext.tsx`
+- Browser metadata: `src/app/layout.tsx`
+- Installable PWA identity: `src/app/manifest.ts`
+- Email and security communication defaults: `src/lib/communication-defaults.ts`
+- Admin-configurable logo and receipt branding: Admin Control Panel settings
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Compatibility and migration safety
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+This rebrand changes customer-facing names and package metadata only. Do not rename Firebase project identifiers, authentication domains, Firestore collections or fields, environment variable names, payment-provider URLs, webhook routes, API contracts, existing user IDs, transaction references, or deployed service URLs without a separately planned migration. Existing logo artwork and verified support contact addresses are intentionally retained until approved replacement assets and contact/domain details are supplied.
 
-## Deploy on Vercel
+## Payment gateway
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The backend payment gateway is maintained in the separate `payment-gateway-9ice-money` repository. Provider credentials must remain server-side and must never be exposed in browser configuration.
