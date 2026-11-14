@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import crypto from "crypto";
 import { getGatewayUrl } from "@/lib/gateway-util";
+import { getOtpHmacSecret, constantTimeHexEqual } from "@/lib/otp-security";
 
 const GATEWAY_URL = getGatewayUrl();
 
@@ -49,27 +50,30 @@ export async function POST(req: Request) {
           throw new Error("Too many failed attempts. Please request a new verification code.");
         }
 
-        const HMAC_SECRET = process.env.CPANEL_SESSION_SECRET || process.env.JWT_SECRET || "signup_otp_secret_key";
+        const HMAC_SECRET = getOtpHmacSecret();
         const hashedSubmitted = crypto.createHmac("sha256", HMAC_SECRET).update(submittedOtp).digest("hex");
-
-        const isValid = otpData.otpHash ? (otpData.otpHash === hashedSubmitted) : (otpData.otpCode === submittedOtp);
+        const isValid = otpData.otpHash
+          ? constantTimeHexEqual(otpData.otpHash, hashedSubmitted)
+          : otpData.otpCode === submittedOtp;
 
         if (!isValid) {
-          const updatedAttempts = (otpData.attempts || 0) + 1;
+          const updatedAttempts = (Number(otpData.attempts) || 0) + 1;
           transaction.update(otpDocRef, { attempts: updatedAttempts });
-          const remaining = Math.max(0, 3 - updatedAttempts);
-          throw new Error(`Incorrect verification code. You have ${remaining} attempt(s) remaining.`);
+          return { success: false, remainingAttempts: Math.max(0, 3 - updatedAttempts) };
         }
 
-        // Mark consumed
         transaction.update(otpDocRef, {
           consumed: true,
           consumedAt: nowIso,
           verified: true,
         });
 
-        return true;
+        return { success: true, remainingAttempts: 3 };
       });
+
+      if (!isVerified.success) {
+        return NextResponse.json({ error: `Incorrect verification code. You have ${isVerified.remainingAttempts} attempt(s) remaining.` }, { status: 400 });
+      }
 
       return NextResponse.json({
         success: true,
