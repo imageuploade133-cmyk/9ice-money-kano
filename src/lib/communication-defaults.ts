@@ -54,12 +54,12 @@ export interface CommunicationBrandingConfig {
 
 export const DEFAULT_COMMUNICATION_BRANDING: CommunicationBrandingConfig = {
   sender: {
-    senderName: "E-Global Pay",
+    senderName: "9iceMoney",
     senderEmail: "notifications@emakemrnd.com.ng",
     replyToEmail: "support@emakemrnd.com.ng",
-    companyName: "E-Global Pay Tech Hub",
+    companyName: "9iceMoney",
     logoUrl: "https://i.ibb.co/WWjZrtC7/E-Tech.png",
-    footerText: "© E-Global Pay Tech Hub. All rights reserved. Secure Financial System.",
+    footerText: "© 9iceMoney. All rights reserved. Secure Financial System.",
   },
   emailOtp: {
     subject: "Your {{brandName}} Security Verification Code",
@@ -69,12 +69,12 @@ export const DEFAULT_COMMUNICATION_BRANDING: CommunicationBrandingConfig = {
     cardStyle: "modern",
     expiryText: "This verification code expires in {{expiryMinutes}} minutes. Do not share it.",
     securityWarning: "If you did not initiate this request, please contact support immediately to secure your account.",
-    footer: "E-Global Pay Automated Security Dispatch",
+    footer: "9iceMoney Automated Security Dispatch",
     bannerUrl: "",
   },
   whatsappOtp: {
     messageTemplate: "Hello {{name}},\n\nYour {{brandName}} verification code is *{{otp}}*.\n\nThis code expires in {{expiryMinutes}} minutes.\n\nDo NOT share this code with anyone for security.",
-    brandName: "E-Global Pay",
+    brandName: "9iceMoney",
     greeting: "Hello {{name}},",
     mainMessage: "Your verification code is *{{otp}}*.",
     expiryMessage: "This code expires in {{expiryMinutes}} minutes.",
@@ -86,9 +86,9 @@ export const DEFAULT_COMMUNICATION_BRANDING: CommunicationBrandingConfig = {
     subject: "Welcome to {{brandName}} - Your Account is Active!",
     logoUrl: "https://i.ibb.co/WWjZrtC7/E-Tech.png",
     bannerUrl: "",
-    heading: "Welcome to E-Global Pay!",
+    heading: "Welcome to 9iceMoney!",
     greeting: "Hello {{name}},",
-    welcomeMessage: "Thank you for joining E-Global Pay. Your secure multi-currency digital wallet and financial suite is ready for seamless transactions, bill payments, and investments.",
+    welcomeMessage: "Thank you for joining 9iceMoney. Your secure multi-currency digital wallet and financial suite is ready for seamless transactions, bill payments, and investments.",
     ctaButtonText: "Access Wallet Dashboard",
     ctaButtonUrl: "https://e-tech-global-hub.vercel.app/auth/login",
     footer: "Need assistance? Our support team is available 24/7.",
