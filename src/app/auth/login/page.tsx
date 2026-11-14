@@ -76,7 +76,7 @@ export default function LoginPage() {
           <div className="relative w-20 h-20 mb-4 flex items-center justify-center">
             <AppLogo size={64} />
           </div>
-          <h1 className="font-hanken font-bold text-2xl tracking-tight text-black">E-Global Pay</h1>
+          <h1 className="font-hanken font-bold text-2xl tracking-tight text-black">9iceMoney</h1>
           <p className="text-gray-500 font-hanken mt-1 text-xs font-semibold">Welcome back to your secure hub</p>
         </div>
 
