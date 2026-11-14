@@ -13,7 +13,7 @@ export const AppLogo: React.FC<AppLogoProps> = ({
   logoUrl,
   size = 28,
   className = "",
-  alt = "E-Global Pay Logo",
+  alt = "9iceMoney Logo",
 }) => {
   const [imageError, setImageError] = useState(false);
 
