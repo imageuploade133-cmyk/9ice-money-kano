@@ -194,7 +194,13 @@ export async function sendEmail(params: SendEmailParams): Promise<boolean> {
     if (data.emailAdminPassword) adminPassword = data.emailAdminPassword;
     else if (data.whatsappAdminPassword) adminPassword = data.whatsappAdminPassword;
 
-    if (data.senderName) senderName = data.senderName;
+    if (data.senderName) {
+      const configuredSenderName = data.senderName.trim();
+      const legacySenderNames = ["e-global pay", "e-global pay tech hub", "e-tech global hub"];
+      senderName = legacySenderNames.includes(configuredSenderName.toLowerCase())
+        ? "9iceMoney"
+        : configuredSenderName;
+    }
     if (data.senderEmail) senderEmail = data.senderEmail;
   }
 
