@@ -55,8 +55,8 @@ export interface CommunicationBrandingConfig {
 export const DEFAULT_COMMUNICATION_BRANDING: CommunicationBrandingConfig = {
   sender: {
     senderName: "9iceMoney",
-    senderEmail: "notifications@emakemrnd.com.ng",
-    replyToEmail: "support@emakemrnd.com.ng",
+    senderEmail: "9icemoney@emakemrnd.com.ng",
+    replyToEmail: "9icemoney@emakemrnd.com.ng",
     companyName: "9iceMoney",
     logoUrl: "https://i.ibb.co/WWjZrtC7/E-Tech.png",
     footerText: "© 9iceMoney. All rights reserved. Secure Financial System.",
@@ -90,7 +90,7 @@ export const DEFAULT_COMMUNICATION_BRANDING: CommunicationBrandingConfig = {
     greeting: "Hello {{name}},",
     welcomeMessage: "Thank you for joining 9iceMoney. Your secure multi-currency digital wallet and financial suite is ready for seamless transactions, bill payments, and investments.",
     ctaButtonText: "Access Wallet Dashboard",
-    ctaButtonUrl: "https://e-tech-global-hub.vercel.app/auth/login",
+    ctaButtonUrl: "https://9icemoney.emakemrnd.com.ng/auth/login",
     footer: "Need assistance? Our support team is available 24/7.",
     primaryColor: "#FC7A00",
   },
