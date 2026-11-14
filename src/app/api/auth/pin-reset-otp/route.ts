@@ -95,7 +95,7 @@ export async function POST(req: Request) {
 
       const dispatched = await sendEmail({
         to: userEmail,
-        subject: "E-Global Pay - Access PIN Reset Verification Code",
+        subject: "9iceMoney - Access PIN Reset Verification Code",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e0e0e0; border-radius: 12px; background-color: #ffffff;">
             <div style="text-align: center; margin-bottom: 20px;">
@@ -108,7 +108,7 @@ export async function POST(req: Request) {
             </h2>
             <p style="color: #4a5568; font-size: 14px; line-height: 1.6;">Hello ${escapeHtml(userName)},</p>
             <p style="color: #4a5568; font-size: 14px; line-height: 1.6;">
-              We received a request to reset the Access PIN for your E-Global Pay account. Use the 6-digit verification code below to authorize this request:
+              We received a request to reset the Access PIN for your 9iceMoney account. Use the 6-digit verification code below to authorize this request:
             </p>
             <div style="background-color: #f7fafc; border: 2px dashed #FC7A00; padding: 18px; font-size: 28px; font-weight: font-black; text-align: center; letter-spacing: 8px; color: #1a202c; margin: 24px 0; border-radius: 8px; font-family: monospace;">
               ${safeRawOtp}
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
             </p>
             <hr style="border: none; border-top: 1px solid #edf2f7; margin: 20px 0;" />
             <p style="color: #a0aec0; font-size: 11px; text-align: center; margin: 0;">
-              E-Global Pay Security Systems
+              9iceMoney Security
             </p>
           </div>
         `,
