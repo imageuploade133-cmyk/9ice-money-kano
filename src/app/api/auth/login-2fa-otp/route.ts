@@ -136,38 +136,49 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Please enter the 6-digit OTP code." }, { status: 400 });
       }
 
-      const otpSnap = await adminDb.collection("login_2fa_otps").doc(uid).get();
-      if (!otpSnap.exists) {
-        return NextResponse.json({ error: "2FA OTP session expired or invalid. Please request a new code." }, { status: 400 });
+      const otpRef = adminDb.collection("login_2fa_otps").doc(uid);
+      const userRef = adminDb.collection("users").doc(uid);
+      const verification = await adminDb.runTransaction(async (transaction) => {
+        const otpSnap = await transaction.get(otpRef);
+        if (!otpSnap.exists) {
+          return { success: false as const, status: 400, error: "2FA OTP session expired or invalid. Please request a new code." };
+        }
+
+        const otpData = otpSnap.data() || {};
+        const expiresAtMs = new Date(otpData.expiresAt || 0).getTime();
+        if (!Number.isFinite(expiresAtMs) || nowMs > expiresAtMs) {
+          transaction.delete(otpRef);
+          return { success: false as const, status: 400, error: "2FA OTP code has expired. Please request a new code." };
+        }
+
+        const attempts = Number(otpData.attempts) || 0;
+        if (attempts >= 5) {
+          transaction.delete(otpRef);
+          return { success: false as const, status: 429, error: "Too many failed attempts. Please request a new OTP code." };
+        }
+
+        const submittedHash = crypto.createHmac("sha256", getOtpHmacSecret()).update(submittedOtp).digest("hex");
+        if (!constantTimeHexEqual(submittedHash, otpData.otpHash)) {
+          const nextAttempts = attempts + 1;
+          transaction.update(otpRef, { attempts: nextAttempts });
+          return {
+            success: false as const,
+            status: nextAttempts >= 5 ? 429 : 400,
+            error: nextAttempts >= 5
+              ? "Too many failed attempts. Please request a new OTP code."
+              : "Invalid 2FA OTP code. Please check and try again.",
+          };
+        }
+
+        // Consume the OTP and record verification in one atomic operation.
+        transaction.delete(otpRef);
+        transaction.set(userRef, { last2faVerifiedAt: new Date(nowMs).toISOString() }, { merge: true });
+        return { success: true as const };
+      });
+
+      if (!verification.success) {
+        return NextResponse.json({ error: verification.error }, { status: verification.status });
       }
-
-      const otpData = otpSnap.data() || {};
-      const nowMs = Date.now();
-      const expiresAtMs = new Date(otpData.expiresAt || 0).getTime();
-
-      if (nowMs > expiresAtMs) {
-        await adminDb.collection("login_2fa_otps").doc(uid).delete().catch(() => {});
-        return NextResponse.json({ error: "2FA OTP code has expired. Please request a new code." }, { status: 400 });
-      }
-
-      if ((otpData.attempts || 0) >= 5) {
-        await adminDb.collection("login_2fa_otps").doc(uid).delete().catch(() => {});
-        return NextResponse.json({ error: "Too many failed attempts. Please request a new OTP code." }, { status: 429 });
-      }
-
-      const submittedHash = crypto.createHmac("sha256", getOtpHmacSecret()).update(submittedOtp).digest("hex");
-      if (!constantTimeHexEqual(submittedHash, otpData.otpHash)) {
-        await adminDb.collection("login_2fa_otps").doc(uid).update({
-          attempts: (otpData.attempts || 0) + 1,
-        }).catch(() => {});
-        return NextResponse.json({ error: "Invalid 2FA OTP code. Please check and try again." }, { status: 400 });
-      }
-
-      // OTP verified successfully. Consume session and update user record
-      await adminDb.collection("login_2fa_otps").doc(uid).delete().catch(() => {});
-      await adminDb.collection("users").doc(uid).set({
-        last2faVerifiedAt: new Date().toISOString(),
-      }, { merge: true });
 
       return NextResponse.json({
         success: true,
