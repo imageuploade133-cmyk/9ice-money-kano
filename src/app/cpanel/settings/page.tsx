@@ -26,11 +26,11 @@ function CpanelSettingsPageContent() {
   const { isDark, toggleTheme } = useCpanelTheme();
   const [logoInput, setLogoInput] = useState(config.logoUrl);
   const [receiptLogoInput, setReceiptLogoInput] = useState(config.receiptLogoUrl || config.logoUrl || "https://i.ibb.co/WWjZrtC7/E-Tech.png");
-  const [receiptNameInput, setReceiptNameInput] = useState(config.receiptName || "E-TECH GLOBAL HUB");
+  const [receiptNameInput, setReceiptNameInput] = useState(config.receiptName || "9iceMoney");
   const [receiptBgImageUrlInput, setReceiptBgImageUrlInput] = useState(config.receiptBgImageUrl || "");
   const [receiptBgImageEnabledInput, setReceiptBgImageEnabledInput] = useState(config.receiptBgImageEnabled === true);
   const [receiptBgImageOpacityInput, setReceiptBgImageOpacityInput] = useState(config.receiptBgImageOpacity ?? 0.15);
-  const [receiptCbnTextInput, setReceiptCbnTextInput] = useState(config.receiptCbnText || "E-Global Pay is a Fintech app powered by Flutterwave, licensed by CBN and insured by NDIC.");
+  const [receiptCbnTextInput, setReceiptCbnTextInput] = useState(config.receiptCbnText || "9iceMoney is a Fintech app powered by Flutterwave, licensed by CBN and insured by NDIC.");
   const [statementLogoInput, setStatementLogoInput] = useState(config.statementLogoUrl || config.logoUrl || "https://i.ibb.co/WWjZrtC7/E-Tech.png");
   const [statementSignatureInput, setStatementSignatureInput] = useState(config.statementSignatureUrl || "");
   const [statementStampInput, setStatementStampInput] = useState(config.statementStampUrl || "");
@@ -64,11 +64,11 @@ function CpanelSettingsPageContent() {
   useEffect(() => {
     setLogoInput(config.logoUrl);
     setReceiptLogoInput(config.receiptLogoUrl || config.logoUrl || "https://i.ibb.co/WWjZrtC7/E-Tech.png");
-    setReceiptNameInput(config.receiptName || "E-TECH GLOBAL HUB");
+    setReceiptNameInput(config.receiptName || "9iceMoney");
     setReceiptBgImageUrlInput(config.receiptBgImageUrl || "");
     setReceiptBgImageEnabledInput(config.receiptBgImageEnabled === true);
     setReceiptBgImageOpacityInput(config.receiptBgImageOpacity ?? 0.15);
-    setReceiptCbnTextInput(config.receiptCbnText || "E-Global Pay is a Fintech app powered by Flutterwave, licensed by CBN and insured by NDIC.");
+    setReceiptCbnTextInput(config.receiptCbnText || "9iceMoney is a Fintech app powered by Flutterwave, licensed by CBN and insured by NDIC.");
     setStatementLogoInput(config.statementLogoUrl || config.logoUrl || "https://i.ibb.co/WWjZrtC7/E-Tech.png");
     setStatementSignatureInput(config.statementSignatureUrl || "");
     setStatementStampInput(config.statementStampUrl || "");
@@ -764,7 +764,7 @@ function CpanelSettingsPageContent() {
                     type="text"
                     value={receiptNameInput}
                     onChange={(e) => setReceiptNameInput(e.target.value)}
-                    placeholder="e.g. E-TECH GLOBAL HUB"
+                    placeholder="e.g. 9iceMoney"
                     className={inputClass}
                   />
                 </div>
@@ -969,7 +969,7 @@ function CpanelSettingsPageContent() {
                   <div className="border-b border-gray-100 pb-2 flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <div className="w-4 h-4 rounded bg-[#FC7A00]/20 flex items-center justify-center text-[8px] font-bold text-[#FC7A00]">E</div>
-                      <span className="text-[9px] font-black tracking-wider text-gray-800">E-GLOBAL PAY</span>
+                      <span className="text-[9px] font-black tracking-wider text-gray-800">9ICEMONEY</span>
                     </div>
                     <span className="text-[7px] font-bold text-gray-400">STATEMENT OF ACCOUNT</span>
                   </div>
@@ -1012,7 +1012,7 @@ function CpanelSettingsPageContent() {
 
                   {/* Bottom Footer Line */}
                   <div className="relative z-10 border-t border-gray-100 pt-1 text-[6.5px] text-gray-400 text-center font-semibold">
-                    Confidential Electronic Statement • E-Global Pay
+                    Confidential Electronic Statement • 9iceMoney
                   </div>
                 </div>
               </div>
