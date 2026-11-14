@@ -22,8 +22,8 @@ const hankenGrotesk = Hanken_Grotesk({
 });
 
 export const metadata: Metadata = {
-  title: "E-Global Pay | Secure Digital Wallet",
-  description: "Next-generation financial technology and secure digital banking.",
+  title: "9iceMoney | Secure Digital Wallet",
+  description: "9iceMoney — secure digital payments, wallet services and financial transactions.",
   icons: {
     icon: "https://i.ibb.co/WWjZrtC7/E-Tech.png",
   },
