@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { adminDb } from "@/lib/firebase-admin";
 import bcrypt from "bcryptjs";
 import { callWhatsappBackend } from "@/lib/whatsapp-service";
+import crypto from "crypto";
 
 function normalizePhone(phone: string): string {
   let cleaned = phone.replace(/[^\d+]/g, "");
@@ -77,7 +78,7 @@ export async function POST(req: Request) {
       }
 
       // Generate 6-digit OTP
-      const rawOtp = Math.floor(100000 + Math.random() * 900000).toString();
+      const rawOtp = crypto.randomInt(100000, 1000000).toString();
       const hashedOtp = await bcrypt.hash(rawOtp, 10);
       const expiresAt = now + 5 * 60 * 1000; // 5 minutes
 
@@ -104,7 +105,6 @@ export async function POST(req: Request) {
         createdAt: new Date().toISOString()
       });
 
-      console.log(`[Admin Password Reset OTP Generated] Email: ${cleanEmail}, Raw OTP: ${rawOtp}`);
 
       // Dispatch WhatsApp message with OTP code
       const cleanNum = inputPhone.replace(/\D/g, "");
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
         ? `234${cleanNum.startsWith("0") ? cleanNum.slice(1) : cleanNum}`
         : cleanNum;
 
-      const whatsappMessage = `[E-Tech Security] Your Admin Password Reset OTP code is ${rawOtp}. Valid for 5 minutes. Do not share this code with anyone.`;
+      const whatsappMessage = `[9iceMoney Security] Your Admin Password Reset OTP code is ${rawOtp}. Valid for 5 minutes. Do not share this code with anyone.`;
 
       let whatsappSent = false;
       try {
@@ -129,49 +129,58 @@ export async function POST(req: Request) {
         success: true,
         message: `OTP sent successfully via WhatsApp to ${inputPhone.slice(0, 6)}****${inputPhone.slice(-2)}`,
         whatsappDispatched: whatsappSent,
-        // Include rawOtp in response for local test/dev sandbox
-        devOtp: process.env.NODE_ENV !== "production" ? rawOtp : undefined
       });
     }
 
     // Step 2: Verify OTP
     if (action === "verify_otp") {
-      if (!otp) {
+      if (!/^\\d{6}$/.test(String(otp || ""))) {
         return NextResponse.json({ error: "6-digit OTP code is required." }, { status: 400 });
       }
 
       const otpDocRef = adminDb.collection("admin_otp_requests").doc(cleanEmail);
-      const otpSnap = await otpDocRef.get();
+      const verification = await adminDb.runTransaction(async (transaction) => {
+        const otpSnap = await transaction.get(otpDocRef);
+        if (!otpSnap.exists) {
+          return { success: false as const, status: 404, error: "No OTP request found for this email. Please request a new code." };
+        }
 
-      if (!otpSnap.exists) {
-        return NextResponse.json({ error: "No OTP request found for this email. Please request a new code." }, { status: 404 });
+        const otpData = otpSnap.data() || {};
+        if (!otpData.expiresAt || Date.now() > Number(otpData.expiresAt)) {
+          transaction.delete(otpDocRef);
+          return { success: false as const, status: 400, error: "OTP code has expired. Please request a new code." };
+        }
+
+        if (otpData.verified === true) {
+          return { success: true as const };
+        }
+
+        const attempts = Number(otpData.attempts) || 0;
+        if (attempts >= 3) {
+          transaction.delete(otpDocRef);
+          return { success: false as const, status: 429, error: "Maximum OTP attempts exceeded. Request a new OTP." };
+        }
+
+        const isValid = await bcrypt.compare(String(otp).trim(), otpData.hashedOtp || "");
+        if (!isValid) {
+          const nextAttempts = attempts + 1;
+          transaction.update(otpDocRef, { attempts: nextAttempts });
+          return {
+            success: false as const,
+            status: nextAttempts >= 3 ? 429 : 400,
+            error: nextAttempts >= 3
+              ? "Maximum OTP attempts exceeded. Request a new OTP."
+              : `Invalid OTP code. ${3 - nextAttempts} attempt(s) remaining.`,
+          };
+        }
+
+        transaction.update(otpDocRef, { verified: true, verifiedAt: new Date().toISOString() });
+        return { success: true as const };
+      });
+
+      if (!verification.success) {
+        return NextResponse.json({ error: verification.error }, { status: verification.status });
       }
-
-      const otpData = otpSnap.data() || {};
-
-      if (Date.now() > otpData.expiresAt) {
-        await otpDocRef.delete();
-        return NextResponse.json({ error: "OTP code has expired. Please request a new code." }, { status: 400 });
-      }
-
-      if ((otpData.attempts || 0) >= 3) {
-        await otpDocRef.delete();
-        return NextResponse.json({ error: "Maximum OTP attempts exceeded. Request a new OTP." }, { status: 429 });
-      }
-
-      const isValid = await bcrypt.compare(String(otp).trim(), otpData.hashedOtp || "");
-
-      if (!isValid) {
-        const nextAttempts = (otpData.attempts || 0) + 1;
-        await otpDocRef.update({ attempts: nextAttempts });
-        return NextResponse.json({
-          error: `Invalid OTP code. ${3 - nextAttempts} attempt(s) remaining.`,
-          remainingAttempts: 3 - nextAttempts
-        }, { status: 400 });
-      }
-
-      // Mark verified
-      await otpDocRef.update({ verified: true, verifiedAt: new Date().toISOString() });
 
       // Audit log
       await adminDb.collection("admin_audit_logs").add({
@@ -192,14 +201,26 @@ export async function POST(req: Request) {
     // Step 3: Trigger Password Reset Email
     if (action === "send_reset_email") {
       const otpDocRef = adminDb.collection("admin_otp_requests").doc(cleanEmail);
-      const otpSnap = await otpDocRef.get();
+      const authorizationConsumed = await adminDb.runTransaction(async (transaction) => {
+        const otpSnap = await transaction.get(otpDocRef);
+        if (!otpSnap.exists) return false;
 
-      if (!otpSnap.exists || !otpSnap.data()?.verified) {
-        return NextResponse.json({ error: "Phone OTP verification is required prior to triggering password recovery." }, { status: 403 });
+        const resetData = otpSnap.data() || {};
+        if (!resetData.verified || !resetData.expiresAt || Date.now() > Number(resetData.expiresAt)) {
+          if (resetData.expiresAt && Date.now() > Number(resetData.expiresAt)) {
+            transaction.delete(otpDocRef);
+          }
+          return false;
+        }
+
+        // Atomically consume the verified authorization to prevent replay.
+        transaction.delete(otpDocRef);
+        return true;
+      });
+
+      if (!authorizationConsumed) {
+        return NextResponse.json({ error: "Phone OTP verification is required and must still be valid before triggering password recovery." }, { status: 403 });
       }
-
-      // Delete the consumed OTP document so it cannot be reused
-      await otpDocRef.delete();
 
       // Audit log
       await adminDb.collection("admin_audit_logs").add({

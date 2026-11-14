@@ -32,3 +32,14 @@ This rebrand changes customer-facing names and package metadata only. Do not ren
 ## Payment gateway
 
 The backend payment gateway is maintained in the separate `payment-gateway-9ice-money` repository. Provider credentials must remain server-side and must never be exposed in browser configuration.
+
+## Authentication OTP security configuration
+
+Configure a server-only secret in the deployment environment before deploying the OTP hardening changes:
+
+- `OTP_HMAC_SECRET`: a cryptographically random value of at least 32 bytes. Generate one with `openssl rand -hex 32`.
+- Keep this value private. Do not prefix it with `NEXT_PUBLIC_`, commit it to Git, or expose it to browser code.
+- Configure the same value in every production deployment that serves this application (including preview/staging deployments that need to issue and verify OTPs).
+- The application can temporarily use the existing server-side `CPANEL_SESSION_SECRET` or `JWT_SECRET` when `OTP_HMAC_SECRET` is not set, but the dedicated `OTP_HMAC_SECRET` is recommended.
+
+OTP endpoints fail closed if no server secret of sufficient length is configured. Existing outstanding OTPs issued before this change may need to be requested again after deployment because their hashes used the previous scheme.
