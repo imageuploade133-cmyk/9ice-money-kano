@@ -22,7 +22,7 @@ export async function GET(req: Request) {
     let emailInstanceId = process.env.EMAIL_INSTANCE_ID || process.env.WHATSAPP_INSTANCE_ID || "";
     let emailAdminUsername = process.env.EMAIL_ADMIN_USERNAME || process.env.WHATSAPP_ADMIN_USERNAME || "";
     let senderName = "9iceMoney";
-    let senderEmail = "no-reply@eglobalpay.com";
+    let senderEmail = "9icemoney@emakemrnd.com.ng";
     let status = "DISCONNECTED";
     let grantedScopes = ["email.send", "email.otp", "email.templates", "email.logs"];
     let dailyLimit = "2,000,000";
