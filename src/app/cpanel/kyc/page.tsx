@@ -67,7 +67,7 @@ function CpanelKycPageContent() {
   const [editingUser, setEditingUser] = useState<PendingKycUser | null>(null);
   const [approvingKycUser, setApprovingKycUser] = useState<PendingKycUser | null>(null);
   const [approveTier, setApproveTier] = useState<string>("Tier 2");
-  const [approveProvider, setApproveProvider] = useState<"flutterwave" | "squad">("flutterwave");
+  const [approveProviders, setApproveProviders] = useState<Array<"flutterwave" | "squad">>(["flutterwave"]);
   const [approveDailyLimit, setApproveDailyLimit] = useState<number>(5000000);
   const [approveSingleLimit, setApproveSingleLimit] = useState<number>(2000000);
 
@@ -298,6 +298,7 @@ function CpanelKycPageContent() {
   const handleKycApproveSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!approvingKycUser) return;
+    if (approveProviders.length === 0) { toast.error("Select at least one virtual-account provider."); return; }
 
     setIsProcessingKyc(approvingKycUser.uid);
     toast.loading("Approving KYC, setting transaction limits & provisioning account...");
@@ -318,7 +319,7 @@ function CpanelKycPageContent() {
         body: JSON.stringify({
           action: "approve",
           targetUid: approvingKycUser.uid,
-          provider: approveProvider,
+          providers: approveProviders,
           tier: approveTier,
           dailyLimit: approveDailyLimit,
           singleLimit: approveSingleLimit,
@@ -734,7 +735,7 @@ function CpanelKycPageContent() {
                             disabled: !(u.kycStatus === "IDENTITY_VERIFIED" || u.kycStatus === "PENDING" || u.kycStatus === "UNVERIFIED"),
                             onClick: () => {
                               setApprovingKycUser(u);
-                              setApproveProvider(selectedProvider[u.uid] || "flutterwave");
+                              setApproveProviders(selectedProvider[u.uid] ? [selectedProvider[u.uid]] : ["flutterwave"]);
                               setApproveTier("Tier 2");
                               setApproveDailyLimit(5000000);
                               setApproveSingleLimit(2000000);
@@ -1090,16 +1091,28 @@ function CpanelKycPageContent() {
                 <p className="font-mono text-[11px] text-gray-400">{approvingKycUser.email}</p>
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-[10px] font-extrabold uppercase text-gray-400">Virtual Account Gateway Provider *</label>
-                <select
-                  value={approveProvider}
-                  onChange={(e) => setApproveProvider(e.target.value as any)}
-                  className={cn(inputClass, "cursor-pointer font-bold")}
-                >
-                  <option value="flutterwave">Flutterwave Gateway Rail</option>
-                  <option value="squad">Squadco (GTBank) Virtual Account Rail</option>
-                </select>
+              <div className="space-y-2">
+                <label className="text-[10px] font-extrabold uppercase text-gray-400">Assign Virtual Account Providers *</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {([
+                    ["flutterwave", "Flutterwave Gateway Rail"],
+                    ["squad", "Squad Virtual Account Rail"],
+                  ] as const).map(([providerId, label]) => (
+                    <label key={providerId} className={cn("flex items-center gap-2 rounded-xl border p-3 text-xs font-bold cursor-pointer", isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50")}>
+                      <input
+                        type="checkbox"
+                        checked={approveProviders.includes(providerId)}
+                        onChange={(e) => setApproveProviders((current) => e.target.checked ? [...current, providerId] : current.filter((item) => item !== providerId))}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                  <label className={cn("flex items-center gap-2 rounded-xl border p-3 text-xs font-bold opacity-60 cursor-not-allowed", isDark ? "border-gray-700 bg-gray-900" : "border-gray-200 bg-gray-50")}>
+                    <input type="checkbox" checked={false} disabled />
+                    9PSB WAAS + VAS (awaiting secure API contract)
+                  </label>
+                </div>
+                <p className="text-[10px] text-amber-600 font-semibold">Select one or both active providers. 9PSB will become selectable after its secure endpoints and API request/response specifications are confirmed.</p>
               </div>
 
               <div className="space-y-1.5">
