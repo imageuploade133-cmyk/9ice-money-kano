@@ -59,10 +59,10 @@ export async function getWhatsappServerConfig(): Promise<WhatsappConfig> {
     return cachedWhatsappConfig.data;
   }
 
-  let apiUrl = (process.env.WHATSAPP_API_URL || "https://whatsapp-b5os.onrender.com").replace(/\/+$/, "");
+  let apiUrl = (process.env.WHATSAPP_API_URL || "").replace(/\/+$/, "");
   let apiKey = process.env.WHATSAPP_API_KEY || "";
-  let instanceId = process.env.WHATSAPP_INSTANCE_ID || "default";
-  let adminUsername = process.env.WHATSAPP_ADMIN_USERNAME || "admin";
+  let instanceId = process.env.WHATSAPP_INSTANCE_ID || "";
+  let adminUsername = process.env.WHATSAPP_ADMIN_USERNAME || "";
   let adminPassword = process.env.WHATSAPP_ADMIN_PASSWORD || "";
 
   try {
