@@ -231,6 +231,8 @@ export async function GET(req: Request) {
         kycType: data.kycType || (data.bvn ? "bvn" : "nin"),
         kycNumber: data.kycNumber || data.bvn || data.nin || "",
         kycStatus: data.kycStatus || "UNVERIFIED",
+        providerProvisioning: data.providerProvisioning || {},
+        assignedProviders: Array.isArray(data.assignedProviders) ? data.assignedProviders : [],
         submittedAt: data.kycSubmittedAt || data.createdAt || new Date().toISOString(),
         capturedSelfie: data.capturedSelfie || data.kycCapturedSelfie || null,
         livenessChallenge: data.livenessChallenge || null,
