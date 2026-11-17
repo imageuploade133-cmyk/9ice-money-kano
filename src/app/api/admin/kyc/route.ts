@@ -231,6 +231,8 @@ export async function GET(req: Request) {
         kycType: data.kycType || (data.bvn ? "bvn" : "nin"),
         kycNumber: data.kycNumber || data.bvn || data.nin || "",
         kycStatus: data.kycStatus || "UNVERIFIED",
+        providerProvisioning: data.providerProvisioning || {},
+        assignedProviders: Array.isArray(data.assignedProviders) ? data.assignedProviders : [],
         submittedAt: data.kycSubmittedAt || data.createdAt || new Date().toISOString(),
         capturedSelfie: data.capturedSelfie || data.kycCapturedSelfie || null,
         livenessChallenge: data.livenessChallenge || null,
@@ -384,8 +386,10 @@ export async function POST(req: Request) {
     const gatewayApiKey = process.env.PAYMENT_GATEWAY_API_KEY || process.env.GATEWAY_API_KEY;
 
     if (action === "approve") {
-      if (!provider || (provider !== "flutterwave" && provider !== "squad")) {
-        return NextResponse.json({ error: "A valid provider ('flutterwave' or 'squad') must be explicitly selected." }, { status: 400 });
+      const requestedProviders = Array.isArray(requestBody.providers) ? requestBody.providers : (provider ? [provider] : []);
+      const providers = Array.from(new Set(requestedProviders.map((value: unknown) => String(value).trim().toLowerCase())));
+      if (providers.length === 0 || providers.some((value: string) => !["flutterwave", "squad"].includes(value))) {
+        return NextResponse.json({ error: "Select at least one supported provider: Flutterwave and/or Squad. 9PSB remains disabled pending its secure API contract." }, { status: 400 });
       }
 
       const assignedTier = requestBody.tier || "Tier 2";
@@ -404,13 +408,15 @@ export async function POST(req: Request) {
       const response = await fetch(`${GATEWAY_URL}/api/admin/kyc/${targetUid}/approve`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ provider })
+        body: JSON.stringify({ providers })
       });
 
       const result = await parseResponseJson(response, "Failed to approve KYC in gateway.");
-      if (!response.ok) {
-        return NextResponse.json({ error: result.message || "Failed to approve KYC in gateway." }, { status: response.status });
+      if (!response.ok && response.status !== 207) {
+        return NextResponse.json({ error: result.message || "Failed to approve KYC in gateway.", details: result.data || null }, { status: response.status });
       }
+      const provisioningStatus = result.data?.status || "VERIFIED";
+      const kycVerified = provisioningStatus === "VERIFIED";
 
       // Update user and wallet documents in Firestore globally with approved Tier level and limits
       const adminEmail = perm.auth?.email || "admin@system";
@@ -425,7 +431,7 @@ export async function POST(req: Request) {
         maxBalance: limits.maxBalance,
         maxAccountBalance: limits.maxBalance,
         hasCustomLimits: limits.hasCustomLimits,
-        kycStatus: "VERIFIED",
+        kycStatus: provisioningStatus,
         kycVerifiedAt: new Date().toISOString(),
         kycVerifiedBy: adminEmail,
         updatedAt: new Date().toISOString(),
@@ -456,13 +462,13 @@ export async function POST(req: Request) {
       await adminDb.collection("wallets").doc(`${targetUid}_NGN`).set(walletUpdatePayload, { merge: true });
 
       // Auto-release any pending held deposits for this user now that KYC is approved
-      await autoReleaseUserHeldDeposits(targetUid, adminEmail);
+      if (kycVerified) await autoReleaseUserHeldDeposits(targetUid, adminEmail);
 
       try {
         const { NotificationService } = await import("@/services/notification-service");
         await NotificationService.sendPushNotification(targetUid, {
-          title: "KYC Verified! 🎉",
-          body: `Congratulations! Your identity verification has been approved for ${assignedTier}. Your daily transfer limit is ₦${limits.dailyLimit.toLocaleString("en-NG")}.`,
+          title: kycVerified ? "KYC Verified! 🎉" : "KYC Review Update",
+          body: kycVerified ? `Your identity verification has been approved for ${assignedTier}. Your daily transfer limit is ₦${limits.dailyLimit.toLocaleString("en-NG")}.` : "Your identity was reviewed, but provider account provisioning needs a retry.",
           type: "security"
         });
       } catch (notifErr: any) {
@@ -470,8 +476,12 @@ export async function POST(req: Request) {
       }
 
       return NextResponse.json({
-        success: true,
-        message: `User KYC successfully approved and static virtual account provisioned via ${provider}!`
+        success: kycVerified,
+        partialSuccess: !!result.data?.partialSuccess,
+        providers: result.data?.providers || {},
+        message: kycVerified
+          ? (result.data?.partialSuccess ? "KYC verified; one or more provider accounts need retry." : "KYC approved and selected provider accounts provisioned.")
+          : "Provider account provisioning failed. KYC remains retryable."
       });
 
     } else if (action === "reject") {
