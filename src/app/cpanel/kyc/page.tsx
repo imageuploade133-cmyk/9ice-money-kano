@@ -29,6 +29,8 @@ interface PendingKycUser {
   virtualAccountNumber?: string;
   virtualAccountBankName?: string;
   balance?: number;
+  providerProvisioning?: Record<string, { status?: string; error?: string }>;
+  assignedProviders?: string[];
 }
 
 const ButtonSpinner = () => (
@@ -349,7 +351,7 @@ function CpanelKycPageContent() {
     const provider = selectedProvider[targetUid];
 
     if ((action === "approve" || action === "retry") && !provider) {
-      toast.error("Please explicitly select a virtual-account provider (Flutterwave or Squadco) before proceeding.");
+      toast.error("Please select the provider to provision or retry (Flutterwave or Squad).");
       setIsProcessingKyc(null);
       return;
     }
@@ -678,9 +680,9 @@ function CpanelKycPageContent() {
                     </div>
 
                     {/* Provider Selector for Approval */}
-                    {(u.kycStatus === "IDENTITY_VERIFIED" || u.kycStatus === "PROVISIONING_FAILED" || u.kycStatus === "PENDING" || u.kycStatus === "UNVERIFIED") && (
+                    {(u.kycStatus === "IDENTITY_VERIFIED" || u.kycStatus === "PROVISIONING_FAILED" || u.kycStatus === "PENDING" || u.kycStatus === "UNVERIFIED" || (u.kycStatus === "VERIFIED" && Object.values(u.providerProvisioning || {}).some((item) => item.status === "FAILED")) ) && (
                       <div className="space-y-1">
-                        <label className="text-[9px] font-black uppercase text-gray-400">Select Virtual Account Gateway Provider *</label>
+                        <label className="text-[9px] font-black uppercase text-gray-400">Select Provider for Provisioning / Retry *</label>
                         <select
                           value={currentProvider}
                           onChange={(e) => setSelectedProvider({ ...selectedProvider, [u.uid]: e.target.value as any })}
@@ -689,6 +691,7 @@ function CpanelKycPageContent() {
                           <option value="">-- Choose Virtual Bank Gateway --</option>
                           <option value="flutterwave">Flutterwave Gateway Rail</option>
                           <option value="squad">Squadco (GTBank) Virtual Account Rail</option>
+                          <option value="9psb" disabled>9PSB WAAS (awaiting secure API contract)</option>
                         </select>
                       </div>
                     )}
@@ -745,7 +748,7 @@ function CpanelKycPageContent() {
                             label: "Retry Provisioning",
                             icon: "refresh",
                             variant: "warning",
-                            disabled: u.kycStatus !== "PROVISIONING_FAILED",
+                            disabled: !(u.kycStatus === "PROVISIONING_FAILED" || Object.values(u.providerProvisioning || {}).some((item) => item.status === "FAILED")) || !selectedProvider[u.uid],
                             onClick: () => handleProcessKyc(u.uid, "retry"),
                           },
                           {
