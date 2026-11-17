@@ -87,52 +87,35 @@ async function dispatchOtpToChannel(
   rawOtp: string,
   uid: string
 ): Promise<boolean> {
-  if (channel === "whatsapp") {
-    try {
-      const res = await fetch(`${GATEWAY_URL}/api/auth/send-otp`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": GATEWAY_API_KEY,
-        },
-        body: JSON.stringify({
-          phoneNumber: destination,
-          type: "new_device_login",
-          customMessage: `Your E-Global Pay New Device Security Login Verification Code is *${rawOtp}*. Valid for 5 minutes. Do not share with anyone.`
-        }),
-      });
-      return res.ok;
-    } catch (err) {
-      console.error("[New Device OTP] WhatsApp dispatch error:", err);
-      return false;
-    }
-  } else {
-    try {
-      const escapeHtml = (str: string) => String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-      const safeRawOtp = escapeHtml(rawOtp);
+  const gatewayUrl = GATEWAY_URL.replace(/\/+$/, "");
+  if (!GATEWAY_API_KEY) {
+    console.error("[New Device OTP] Backend gateway API key is not configured.");
+    return false;
+  }
 
-      const { sendEmail } = await import("@/lib/email-service");
-      const result = await sendEmail({
-        to: destination,
-        subject: "Security Alert: New Device Login Verification Code",
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px;">
-            <h2 style="color: #FC7A00; margin-bottom: 16px;">E-Global Pay Security Guard</h2>
-            <p>Hello,</p>
-            <p>A new device is attempting to log into your account. Use the 6-digit code below to verify and authorize this device:</p>
-            <div style="background-color: #f4f4f4; padding: 15px; font-size: 26px; font-weight: bold; text-align: center; letter-spacing: 6px; color: #333; margin: 20px 0; border-radius: 4px;">
-              ${safeRawOtp}
-            </div>
-            <p>This verification code expires in 5 minutes. Do not share this code with anyone.</p>
-            <p style="color: #d9534f; font-size: 12px; margin-top: 24px;">If you did not initiate this login, please change your PIN and contact support immediately.</p>
-          </div>
-        `,
-      });
-      return result;
-    } catch (err) {
-      console.error("[New Device OTP] Email dispatch error:", err);
+  try {
+    const response = await fetch(`${gatewayUrl}/api/auth/dispatch-otp`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": GATEWAY_API_KEY,
+      },
+      body: JSON.stringify({
+        channel,
+        destination,
+        otp: rawOtp,
+        purpose: "new_device_login",
+      }),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data.success) {
+      console.error("[New Device OTP] VM dispatch rejected:", data.message || data.error || response.status);
       return false;
     }
+    return true;
+  } catch (err) {
+    console.error("[New Device OTP] VM dispatch error:", err);
+    return false;
   }
 }
 

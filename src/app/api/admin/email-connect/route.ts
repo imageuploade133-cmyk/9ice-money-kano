@@ -17,13 +17,13 @@ export async function GET(req: Request) {
     }
     const { uid } = perm.auth;
 
-    let emailApiUrl = process.env.EMAIL_API_URL || "https://whatsapp-b5os.onrender.com/api/email/send";
-    let emailApiKey = process.env.EMAIL_API_KEY || process.env.WHATSAPP_API_KEY || "inst_33647102";
-    let emailInstanceId = process.env.EMAIL_INSTANCE_ID || process.env.WHATSAPP_INSTANCE_ID || "inst_33647102";
+    let emailApiUrl = process.env.EMAIL_API_URL || "";
+    let emailApiKey = process.env.EMAIL_API_KEY || process.env.WHATSAPP_API_KEY || "";
+    let emailInstanceId = process.env.EMAIL_INSTANCE_ID || process.env.WHATSAPP_INSTANCE_ID || "";
     let emailAdminUsername = process.env.EMAIL_ADMIN_USERNAME || process.env.WHATSAPP_ADMIN_USERNAME || "";
-    let senderName = "E-Global Pay";
+    let senderName = "9iceMoney";
     let senderEmail = "no-reply@eglobalpay.com";
-    let status = "CONNECTED";
+    let status = "DISCONNECTED";
     let grantedScopes = ["email.send", "email.otp", "email.templates", "email.logs"];
     let dailyLimit = "2,000,000";
     let dailyUsed = 1;
@@ -141,8 +141,8 @@ export async function POST(req: Request) {
 
       const newKeyId = `key-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
       const cleanKey = String(emailApiKey).trim();
-      const cleanUrl = String(emailApiUrl || process.env.EMAIL_API_URL || "https://whatsapp-b5os.onrender.com/api/email/send").trim();
-      const cleanInst = String(emailInstanceId || process.env.EMAIL_INSTANCE_ID || "inst_33647102").trim();
+      const cleanUrl = String(emailApiUrl || process.env.EMAIL_API_URL || "").trim();
+      const cleanInst = String(emailInstanceId || process.env.EMAIL_INSTANCE_ID || "").trim();
 
       const newKeyRecord = {
         id: newKeyId,
@@ -153,8 +153,8 @@ export async function POST(req: Request) {
         emailInstanceId: cleanInst,
         emailAdminUsername: emailAdminUsername?.trim() || "",
         emailAdminPassword: emailAdminPassword?.trim() || "",
-        senderName: senderName?.trim() || "E-Global Pay",
-        senderEmail: senderEmail?.trim() || "no-reply@eglobalpay.com",
+        senderName: senderName?.trim() || "9iceMoney",
+        senderEmail: senderEmail?.trim() || "9icemoney@emakemrnd.com.ng",
         status: "CONNECTED",
         grantedScopes: Array.isArray(grantedScopes) && grantedScopes.length > 0 ? grantedScopes : ["email.send", "email.otp", "email.templates", "email.logs"],
         dailyLimit: dailyLimit?.trim() || "2,000,000",
@@ -377,17 +377,17 @@ export async function POST(req: Request) {
       }
 
       const recipient = targetEmail.trim();
-      const subject = customSubject?.trim() || "Email Gateway Connection Test - E-Global Pay";
-      const messageBody = customMessage?.trim() || "This is a live test email sent from your E-Global Control Panel Email Gateway configuration tool.";
+      const subject = customSubject?.trim() || "Email Gateway Connection Test - 9iceMoney";
+      const messageBody = customMessage?.trim() || "This is a live test email sent from your 9iceMoney Control Panel Email Gateway configuration tool.";
 
       // Read active configuration
-      let targetApiUrl = process.env.EMAIL_API_URL || "https://whatsapp-b5os.onrender.com/api/email/send";
-      let targetApiKey = process.env.EMAIL_API_KEY || process.env.WHATSAPP_API_KEY || "inst_33647102";
-      let targetInstanceId = process.env.EMAIL_INSTANCE_ID || process.env.WHATSAPP_INSTANCE_ID || "inst_33647102";
+      let targetApiUrl = process.env.EMAIL_API_URL || "";
+      let targetApiKey = process.env.EMAIL_API_KEY || process.env.WHATSAPP_API_KEY || "";
+      let targetInstanceId = process.env.EMAIL_INSTANCE_ID || process.env.WHATSAPP_INSTANCE_ID || "";
       let targetAdminUsername = process.env.EMAIL_ADMIN_USERNAME || process.env.WHATSAPP_ADMIN_USERNAME || "";
       let targetAdminPassword = process.env.EMAIL_ADMIN_PASSWORD || process.env.WHATSAPP_ADMIN_PASSWORD || "";
-      let targetSenderName = "E-Global Pay";
-      let targetSenderEmail = "no-reply@eglobalpay.com";
+      let targetSenderName = "9iceMoney";
+      let targetSenderEmail = "9icemoney@emakemrnd.com.ng";
 
       try {
         const docSnap = await adminDb.collection("config").doc("email_connect").get();
@@ -403,6 +403,10 @@ export async function POST(req: Request) {
         }
       } catch (err) {
         console.warn("[Email Connect Test] Config load warning:", err);
+      }
+
+      if (!targetApiUrl || !targetApiKey) {
+        return NextResponse.json({ error: "Email test provider is not configured. Save an Email Connect configuration first. OTP delivery through the backend VM is not affected by this setting." }, { status: 400 });
       }
 
       console.log(`[Email Connect Test] Dispatching test connection email to: ${recipient} via ${targetApiUrl}`);
@@ -432,7 +436,7 @@ export async function POST(req: Request) {
             </p>
           </div>
           <p style="color: #94a3b8; font-size: 11px; text-align: center; margin: 0;">
-            Sent automatically by E-Global CPanel Email Connect Diagnostic System
+            Sent automatically by 9iceMoney CPanel Email Connect Diagnostic System
           </p>
         </div>
       `;
